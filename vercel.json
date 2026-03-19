@@ -1,0 +1,7 @@
+{
+  "rewrites": [
+    { "source": "/moi_c_ProjectInfo/(.*)", "destination": "/moi_c_ProjectInfo/index.html" },
+    { "source": "/moi_c_ClientInfo/(.*)", "destination": "/moi_c_ClientInfo/$1" },
+    { "source": "/((?!assets|moi_c_).*)", "destination": "/index.html" }
+  ]
+}

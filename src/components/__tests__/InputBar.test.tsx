@@ -64,7 +64,6 @@ describe('InputBar', () => {
   });
 
   it('disables send button when disabled prop is true', async () => {
-    const user = userEvent.setup();
     render(<InputBar onSend={vi.fn()} disabled={true} />);
     // Input itself should be disabled too
     const input = screen.getByPlaceholderText('请输入您的问题');

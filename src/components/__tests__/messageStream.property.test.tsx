@@ -2,7 +2,6 @@ import { render, screen, cleanup } from '@testing-library/react';
 import { describe, it, expect, beforeAll, afterEach } from 'vitest';
 import * as fc from 'fast-check';
 import MessageStream from '@/components/MessageStream';
-import type { ChatMessage } from '@/types/chat';
 
 beforeAll(() => {
   Object.defineProperty(window, 'matchMedia', {

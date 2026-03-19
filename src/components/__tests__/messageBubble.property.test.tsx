@@ -56,7 +56,7 @@ const chatMessageArb: fc.Arbitrary<ChatMessage> = fc
     // role === 'assistant'
     return fc
       .constantFrom<null | 'project' | 'client'>(null, 'project', 'client')
-      .chain((cardType) => {
+      .chain((cardType): fc.Arbitrary<ChatMessage> => {
         if (cardType === null) {
           return fc.record({
             id: fc.uuid(),
