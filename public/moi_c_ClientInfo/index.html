@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>客户详情页</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'Noto Sans SC', 'system-ui', 'sans-serif'],
+          },
+          colors: {
+            brand: { 50: '#EBF5FF', 100: '#D6EBFF', 200: '#ADD6FF', 400: '#5AADFF', 500: '#128BED', 600: '#0E6FBE', 700: '#0A538E' },
+            surface: { 50: '#F8FAFC', 100: '#F1F5F9', 200: '#E2E8F0' },
+            danger: { 50: '#FEF2F2', 500: '#D0021B', 600: '#B91C1C' },
+            success: { 50: '#F0FDF4', 500: '#16A34A', 600: '#15803D' },
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { font-family: 'Inter', 'Noto Sans SC', system-ui, sans-serif; }
+    /* Smooth transitions */
+    .tab-item { transition: color 0.2s ease, border-color 0.2s ease; }
+    .btn-action { transition: all 0.2s ease; }
+    .btn-action:hover { transform: translateY(-1px); }
+    .table-row { transition: background-color 0.15s ease; }
+    .table-row:hover { background-color: #F8FAFC; }
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 3px; }
+    /* Line clamp for expandable text */
+    .line-clamp-2 {
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    /* Reduced motion */
+    @media (prefers-reduced-motion: reduce) {
+      .btn-action:hover { transform: none; }
+      .tab-item, .btn-action, .table-row { transition: none; }
+    }
+    /* Global tooltip */
+    #global-tooltip {
+      position: fixed;
+      z-index: 9999;
+      max-width: 320px;
+      padding: 8px 12px;
+      border-radius: 8px;
+      background: #1e293b;
+      color: #fff;
+      font-size: 12px;
+      line-height: 1.6;
+      font-weight: 400;
+      box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -4px rgba(0,0,0,0.1);
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.15s ease;
+      text-transform: none;
+      letter-spacing: normal;
+    }
+    #global-tooltip.visible { opacity: 1; }
+    #global-tooltip::after {
+      content: '';
+      position: absolute;
+      top: 100%;
+      left: var(--arrow-left, 50%);
+      transform: translateX(-50%);
+      border: 5px solid transparent;
+      border-top-color: #1e293b;
+    }
+  </style>
+</head>
+<body class="bg-surface-50 min-h-screen antialiased text-slate-800">
+  <div id="global-tooltip"></div>
+
+  <!-- 主容器 -->
+  <div class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+    <!-- Breadcrumb -->
+    <nav class="mb-6 flex items-center gap-2 text-sm" aria-label="面包屑导航">
+      <a href="list.html" class="inline-flex items-center gap-1.5 text-slate-500 hover:text-brand-500 transition-colors duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 rounded-md px-1 -ml-1">
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5"/></svg>
+        客户列表
+      </a>
+      <svg class="w-3.5 h-3.5 text-slate-300" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5"/></svg>
+      <span class="text-slate-900 font-medium">客户详情</span>
+    </nav>
+    <div id="header-area"></div>
+    <div id="content-area"></div>
+  </div>
+
+  <script>
+    // ========== 数据层 ==========
+    const customerData = {
+      header: {
+        companyName: '张三李四股份有限公司',
+        status: '存续',
+        sapRating: 'B',
+        aiRating: 'AAA',
+        creditCode: '91110105XXXXXXXXXX',
+        legalRepresentative: '王五',
+        industry: '建筑信息化'
+      },
+      business: [
+        { label: '成立时间', value: '2005-11-13' },
+        { label: '注册资本', value: 10000, type: 'money', unit: '万元' },
+        { label: '实缴资本', value: 8000, type: 'money', unit: '万元' },
+        { label: '人员规模', value: '500-1000 人' },
+        { label: '最近一年社保人数', value: '480 人' },
+        { label: '上市信息', value: '北交所创业板(xxxxxx)' },
+        { label: '实际控制人', value: '张三 (持股 60%)' },
+        { label: '总部地点', value: '北京市朝阳区XXXXXXXXXXXXXXXX' },
+        { label: '上一次天眼查查询日期', value: '2026-03-10' }
+      ],
+      cooperation: [
+        { label: '主营业务', value: '公司主要从事智能硬件研发、生产与销售，涵盖人工智能芯片设计、物联网终端设备制造、智能家居系统集成、工业自动化控制系统开发、云计算平台运维服务、大数据分析与挖掘、企业数字化转型咨询、软件定制开发服务、信息安全防护解决方案、5G通信技术应用研发、边缘计算设备生产、智慧城市基础设施建设、新能源汽车电子控制系统、医疗健康智能设备研发、教育科技产品开发与推广等多个领域，致力于为全球客户提供一站式智能化解决方案。', expandable: true },
+        { label: '官网', value: 'www.zhangsanlisi.com' },
+        { label: '开始合作时间', value: '2018-05-20' },
+        { label: '最近一年合作金额', value: 500, type: 'money', unit: '万元' },
+        { label: '近五年合作金额', value: 4500, type: 'money', unit: '万元' }
+      ],
+      ratingConclusion: [
+        { label: 'SAP内部系统评级', value: 'B' },
+        { label: 'AI问数评级', value: 'AAA' }
+      ],
+      financeSummary: [
+        { label: '应收账款余额', value: 1200, type: 'money', unit: '万元', span: 2 },
+        { label: '应收占比', value: '240.0%', tip: '应收占比 = 应收账款余额 / 最近1年合作金额' },
+        { label: '应收一年以上占比', value: '2.0%', tip: '应收一年以上占比 = 应收一年以上金额 / 最近1年合作金额' },
+        { label: '逾期账款余额', value: 30, type: 'money', unit: '万元', highlight: 'overdue' },
+        { label: '逾期占比', value: '2.5%', tip: '逾期占比 = 逾期账款余额 / 最近1年合作金额' }
+      ],
+      agingData: [
+        { period: '30天以上', ar: null, od: 20, ratio: null },
+        { period: '90天以上', ar: 200, od: 10, ratio: '1.0%' },
+        { period: '180天以上', ar: 50, od: 0, ratio: '0.0%' },
+        { period: '1年以上', ar: 10, od: 0, ratio: '0.0%' },
+        { period: '2年以上', ar: 0, od: 0, ratio: '0.0%' },
+        { period: '3年以上', ar: 0, od: null, ratio: null }
+      ],
+      riskRecords: [
+        { label: '被执行记录个数(含历史)', value: '1 个' },
+        { label: '失信执行人记录个数', value: '0 个' }
+      ]
+    };
+
+    // ========== SVG Icons ==========
+    const icons = {
+      building: '<svg class="w-8 h-8 text-brand-500" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 21h16.5M4.5 3h15M5.25 3v18m13.5-18v18M9 6.75h1.5m-1.5 3h1.5m-1.5 3h1.5m3-6H15m-1.5 3H15m-1.5 3H15M9 21v-3.375c0-.621.504-1.125 1.125-1.125h3.75c.621 0 1.125.504 1.125 1.125V21"/></svg>',
+      creditCode: '<svg class="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15 9h3.75M15 12h3.75M15 15h3.75M4.5 19.5h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Zm6-10.125a1.875 1.875 0 1 1-3.75 0 1.875 1.875 0 0 1 3.75 0Zm1.294 6.336a6.721 6.721 0 0 1-3.17.789 6.721 6.721 0 0 1-3.168-.789 3.376 3.376 0 0 1 6.338 0Z"/></svg>',
+      person: '<svg class="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z"/></svg>',
+      industry: '<svg class="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M20.25 14.15v4.25c0 1.094-.787 2.036-1.872 2.18-2.087.277-4.216.42-6.378.42s-4.291-.143-6.378-.42c-1.085-.144-1.872-1.086-1.872-2.18v-4.25m16.5 0a2.18 2.18 0 0 0 .75-1.661V8.706c0-1.081-.768-2.015-1.837-2.175a48.114 48.114 0 0 0-3.413-.387m4.5 8.006c-.194.165-.42.295-.673.38A23.978 23.978 0 0 1 12 15.75c-2.648 0-5.195-.429-7.577-1.22a2.016 2.016 0 0 1-.673-.38m0 0A2.18 2.18 0 0 1 3 12.489V8.706c0-1.081.768-2.015 1.837-2.175a48.111 48.111 0 0 1 3.413-.387m7.5 0V5.25A2.25 2.25 0 0 0 13.5 3h-3a2.25 2.25 0 0 0-2.25 2.25v.894m7.5 0a48.667 48.667 0 0 0-7.5 0M12 12.75h.008v.008H12v-.008Z"/></svg>'
+    };
+
+    // ========== 工具函数 ==========
+    function formatMoney(value) {
+      if (value === null || value === undefined || typeof value !== 'number' || isNaN(value)) {
+        return '--';
+      }
+      return value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function renderBadge(text, variant) {
+      const styles = {
+        success: 'bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-600/20 shadow-sm',
+        primary: 'bg-gradient-to-r from-brand-500 to-brand-600 text-white shadow-md shadow-brand-500/25',
+        secondary: 'bg-gradient-to-r from-purple-500 to-purple-600 text-white shadow-md shadow-purple-500/25',
+        danger: 'bg-red-50 text-red-700 ring-1 ring-inset ring-red-600/20 shadow-sm'
+      };
+      const cls = styles[variant] || styles.success;
+      return '<span class="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-semibold ' + cls + ' transition-all duration-200">' + text + '</span>';
+    }
+
+    function getBadgeVariant(type, value) {
+      if (type === 'status' && (value === '存续' || value === '正常')) return 'success';
+      if (type === 'rating') return 'primary';
+      if (type === 'risk') return 'danger';
+      return null;
+    }
+
+    // ========== Header ==========
+    function renderHeader() {
+      const container = document.getElementById('header-area');
+      if (!container) return;
+      const h = customerData.header;
+
+      let badgesHtml = '';
+      const statusVariant = getBadgeVariant('status', h.status);
+      if (statusVariant) badgesHtml += renderBadge(h.status, statusVariant);
+      if (h.sapRating) badgesHtml += renderBadge('SAP评级：' + h.sapRating, 'primary');
+      if (h.aiRating) badgesHtml += renderBadge('AI评级：' + h.aiRating, 'secondary');
+
+      container.innerHTML =
+        '<div class="bg-white rounded-2xl shadow-sm ring-1 ring-slate-900/5 p-6 sm:p-8 mb-6 hover:shadow-md transition-shadow duration-300">' +
+          '<div class="flex items-center gap-4">' +
+            '<div class="flex-shrink-0 w-14 h-14 rounded-xl bg-gradient-to-br from-brand-50 to-brand-100 flex items-center justify-center shadow-sm">' + icons.building + '</div>' +
+            '<div class="flex-1 min-w-0">' +
+              '<div class="flex items-center gap-3 flex-wrap mb-2">' +
+                '<h1 class="text-2xl font-bold text-slate-900 tracking-tight">' + h.companyName + '</h1>' +
+                '<div class="flex items-center gap-2 flex-wrap">' + badgesHtml + '</div>' +
+              '</div>' +
+              '<div class="flex items-center gap-3 sm:gap-4 text-sm text-slate-600 flex-wrap">' +
+                '<span class="inline-flex items-center gap-1.5 hover:text-slate-900 transition-colors">' + icons.creditCode + ' <span class="font-medium">统一信用代码：</span>' + h.creditCode + '</span>' +
+                '<span class="hidden sm:inline text-slate-300">•</span>' +
+                '<span class="inline-flex items-center gap-1.5 hover:text-slate-900 transition-colors">' + icons.person + ' <span class="font-medium">法定代表人：</span>' + h.legalRepresentative + '</span>' +
+                '<span class="hidden sm:inline text-slate-300">•</span>' +
+                '<span class="inline-flex items-center gap-1.5 hover:text-slate-900 transition-colors">' + icons.industry + ' <span class="font-medium">所属行业：</span>' + h.industry + '</span>' +
+              '</div>' +
+            '</div>' +
+          '</div>' +
+        '</div>';
+    }
+
+    // ========== Tabs ========== (REMOVED - Single page now)
+
+    // ========== Grid Renderer ==========
+    function renderGrid(containerId, fields) {
+      const container = document.getElementById(containerId);
+      if (!container) return;
+
+      let html = '<div class="grid grid-cols-1 sm:grid-cols-4 rounded-xl overflow-hidden ring-1 ring-slate-200 shadow-sm">';
+
+      // Track column position (0-3) to handle span:2 alignment
+      let colPos = 0;
+
+      // Helper: render label cell with optional tooltip
+      function labelHtml(field) {
+        let inner = field.label;
+        if (field.tip) {
+          inner += ' <span class="inline-flex cursor-help tip-trigger" data-tip="' + field.tip.replace(/"/g, '&quot;') + '">' +
+            '<svg class="w-3.5 h-3.5 text-slate-400 hover:text-brand-500 transition-colors duration-150" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M12 18h.01"/><circle cx="12" cy="12" r="10" stroke-width="1.5"/></svg>' +
+            '</span>';
+        }
+        return inner;
+      }
+
+      fields.forEach(function(field, index) {
+        let displayValue;
+        if (field.value === null || field.value === undefined) {
+          displayValue = '<span class="text-slate-400">--</span>';
+        } else if (field.type === 'money') {
+          displayValue = formatMoney(field.value);
+          if (field.unit) displayValue += ' <span class="text-slate-400 text-xs">' + field.unit + '</span>';
+        } else {
+          displayValue = String(field.value);
+          if (field.unit) displayValue += ' <span class="text-slate-400 text-xs">' + field.unit + '</span>';
+        }
+
+        const isOverdueHighlight = field.highlight === 'overdue' && typeof field.value === 'number' && field.value > 0;
+        const valueTextColor = isOverdueHighlight ? 'text-danger-500 font-semibold' : 'text-slate-800';
+        const borderClass = 'border-b border-slate-100';
+
+        // Handle expandable long text fields (主营业务)
+        if (field.expandable && displayValue.length > 100) {
+          const fieldId = containerId + '-expandable-' + index;
+          
+          html += '<div class="col-span-1 px-4 py-3 bg-slate-50 text-slate-500 text-sm font-medium ' + borderClass + ' border-r border-slate-100 flex items-center">' + labelHtml(field) + '</div>';
+          html += '<div class="col-span-1 sm:col-span-3 px-4 py-3 bg-white ' + valueTextColor + ' text-sm ' + borderClass + '">' +
+            '<div class="relative">' +
+              '<div id="' + fieldId + '-content" class="leading-relaxed line-clamp-2">' + displayValue + '</div>' +
+              '<div class="flex justify-end mt-3">' +
+                '<button id="' + fieldId + '-btn" onclick="toggleExpand(\'' + fieldId + '\')" ' +
+                'class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs text-brand-600 hover:text-brand-700 bg-brand-50 hover:bg-brand-100 font-medium cursor-pointer focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 rounded-lg transition-all duration-200">' +
+                '<span>展开查看更多</span>' +
+                '<svg class="w-3.5 h-3.5 transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5"/></svg>' +
+                '</button>' +
+              '</div>' +
+            '</div>' +
+            '</div>';
+          colPos = 0;
+        } else if (field.span === 2) {
+          // If we're mid-row (colPos=2), pad with empty cells to start span:2 on a new row
+          if (colPos === 2) {
+            html += '<div class="hidden sm:block col-span-1 px-4 py-3 bg-slate-50 ' + borderClass + ' border-r border-slate-100"></div>';
+            html += '<div class="hidden sm:block col-span-1 px-4 py-3 bg-white ' + borderClass + '"></div>';
+          }
+          html += '<div class="col-span-1 px-4 py-3 bg-slate-50 text-slate-500 text-sm font-medium ' + borderClass + ' border-r border-slate-100">' + labelHtml(field) + '</div>';
+          html += '<div class="col-span-1 sm:col-span-3 px-4 py-3 bg-white ' + valueTextColor + ' text-sm ' + borderClass + '">' + displayValue + '</div>';
+          colPos = 0;
+        } else {
+          html += '<div class="col-span-1 px-4 py-3 bg-slate-50 text-slate-500 text-sm font-medium ' + borderClass + ' border-r border-slate-100">' + labelHtml(field) + '</div>';
+          html += '<div class="col-span-1 px-4 py-3 bg-white ' + valueTextColor + ' text-sm ' + borderClass + (colPos === 0 ? ' sm:border-r border-slate-100' : '') + '">' + displayValue + '</div>';
+          colPos = (colPos + 2) % 4;
+        }
+      });
+
+      html += '</div>';
+      container.innerHTML = html;
+    }
+
+    // Toggle expand/collapse for long text fields
+    function toggleExpand(fieldId) {
+      const contentEl = document.getElementById(fieldId + '-content');
+      const btnEl = document.getElementById(fieldId + '-btn');
+      const iconEl = btnEl.querySelector('svg');
+      const textEl = btnEl.querySelector('span');
+      
+      if (contentEl.classList.contains('line-clamp-2')) {
+        // Expand
+        contentEl.classList.remove('line-clamp-2');
+        textEl.textContent = '收起';
+        iconEl.style.transform = 'rotate(180deg)';
+      } else {
+        // Collapse
+        contentEl.classList.add('line-clamp-2');
+        textEl.textContent = '展开查看更多';
+        iconEl.style.transform = 'rotate(0deg)';
+      }
+    }
+
+    // ========== Section Title ==========
+    function renderSectionTitle(title) {
+      return '<div class="flex items-center gap-3 mb-5 mt-10 first:mt-0">' +
+        '<div class="w-1.5 h-6 bg-gradient-to-b from-brand-500 to-brand-600 rounded-full shadow-sm"></div>' +
+        '<h3 class="text-lg font-bold text-slate-900 tracking-tight">' + title + '</h3>' +
+        '<div class="flex-1 h-px bg-gradient-to-r from-slate-200 to-transparent"></div>' +
+        '</div>';
+    }
+
+    // ========== Aging Table ==========
+    function renderAgingTable(containerId, rows) {
+      const container = document.getElementById(containerId);
+      if (!container) return;
+
+      let html = '<div class="overflow-hidden rounded-xl ring-1 ring-slate-200 shadow-sm">';
+      html += '<table class="w-full text-sm table-fixed">';
+      html += '<colgroup><col class="w-[25%]"><col class="w-[25%]"><col class="w-[25%]"><col class="w-[25%]"></colgroup>';
+      html += '<thead><tr class="bg-gradient-to-r from-slate-50 to-slate-100">';
+      html += '<th class="px-5 py-4 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">账龄/逾期阶段</th>';
+      html += '<th class="px-5 py-4 text-right text-xs font-bold text-slate-700 uppercase tracking-wider">应收金额 (AR)</th>';
+      html += '<th class="px-5 py-4 text-right text-xs font-bold text-slate-700 uppercase tracking-wider">逾期金额 (OD)</th>';
+      html += '<th class="px-5 py-4 text-right text-xs font-bold text-slate-700 uppercase tracking-wider">' +
+        '<span class="inline-flex items-center gap-1 justify-end">逾期占比' +
+        '<span class="inline-flex cursor-help tip-trigger" data-tip="逾期90天以上占比 = 逾期90天以上金额 / 最近1年合作金额\n逾期180天以上占比 = 逾期180天以上金额 / 最近1年合作金额\n逾期1年以上占比 = 逾期1年以上金额 / 最近1年合作金额\n逾期2年以上占比 = 逾期2年以上金额 / 最近1年合作金额">' +
+        '<svg class="w-3.5 h-3.5 text-slate-400 hover:text-brand-500 transition-colors duration-150" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M12 18h.01"/><circle cx="12" cy="12" r="10" stroke-width="1.5"/></svg>' +
+        '</span></span></th>';
+      html += '</tr></thead><tbody class="divide-y divide-slate-100 bg-white">';
+
+      rows.forEach(function(row) {
+        var arDisplay = row.ar === null || row.ar === undefined ? '<span class="text-slate-300">--</span>' : formatMoney(row.ar) + ' <span class="text-slate-400 text-xs">万元</span>';
+        var odDisplay = row.od === null || row.od === undefined ? '<span class="text-slate-300">--</span>' : formatMoney(row.od) + ' <span class="text-slate-400 text-xs">万元</span>';
+        var ratioDisplay = row.ratio === null || row.ratio === undefined ? '<span class="text-slate-300">--</span>' : row.ratio;
+        var odColor = typeof row.od === 'number' && row.od > 0 ? 'text-danger-500 font-semibold' : 'text-slate-800';
+
+        html += '<tr class="table-row bg-white hover:bg-slate-50/50 transition-colors duration-150">';
+        html += '<td class="px-5 py-3.5 text-slate-700 font-medium">' + row.period + '</td>';
+        html += '<td class="px-5 py-3.5 text-right text-slate-800 tabular-nums">' + arDisplay + '</td>';
+        html += '<td class="px-5 py-3.5 text-right tabular-nums ' + odColor + '">' + odDisplay + '</td>';
+        html += '<td class="px-5 py-3.5 text-right text-slate-800 tabular-nums">' + ratioDisplay + '</td>';
+        html += '</tr>';
+      });
+
+      html += '</tbody></table></div>';
+      container.innerHTML = html;
+    }
+
+    // ========== Sentiment Feed ==========
+    function renderSentimentFeed(containerId, items) {
+      const container = document.getElementById(containerId);
+      if (!container) return;
+
+      if (!items || items.length === 0) {
+        container.innerHTML = '<div class="text-center py-8 text-slate-400 text-sm">暂无舆情数据</div>';
+        return;
+      }
+
+      const sorted = items.slice().sort(function(a, b) { return b.date.localeCompare(a.date); });
+
+      let html = '<div class="relative pl-6 space-y-0">';
+      html += '<div class="absolute left-[7px] top-2 bottom-2 w-px bg-slate-200"></div>';
+
+      sorted.forEach(function(item, idx) {
+        var isRisk = item.type === 'risk';
+        var dotColor = isRisk ? 'bg-red-500 ring-4 ring-red-50' : 'bg-emerald-500 ring-4 ring-emerald-50';
+        var labelBg = isRisk ? 'bg-red-50 text-red-700' : 'bg-emerald-50 text-emerald-700';
+        var labelText = isRisk ? '风险' : '正面';
+
+        html += '<div class="relative pb-6 last:pb-0">';
+        html += '<div class="absolute -left-6 top-1 w-3.5 h-3.5 rounded-full ' + dotColor + '"></div>';
+        html += '<div class="ml-2 p-4 rounded-lg bg-slate-50 ring-1 ring-slate-100">';
+        html += '<div class="flex items-center gap-2 mb-1.5">';
+        html += '<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ' + labelBg + '">' + labelText + '</span>';
+        html += '<span class="text-xs text-slate-400 font-medium">' + item.date + '</span>';
+        html += '</div>';
+        html += '<p class="text-sm text-slate-700 leading-relaxed">' + item.content + '</p>';
+        html += '</div></div>';
+      });
+
+      html += '</div>';
+      container.innerHTML = html;
+    }
+
+    // ========== Main Content ==========
+    function renderContent() {
+      const container = document.getElementById('content-area');
+      if (!container) return;
+
+      container.innerHTML =
+        '<div class="bg-white rounded-2xl shadow-sm ring-1 ring-slate-900/5 p-6 sm:p-8">' +
+          renderSectionTitle('工商背景与规模') +
+          '<div id="grid-business" class="mb-8"></div>' +
+          renderSectionTitle('业务合作') +
+          '<div id="grid-cooperation" class="mb-8"></div>' +
+          renderSectionTitle('评级结论') +
+          '<div id="grid-rating-conclusion" class="mb-8"></div>' +
+          renderSectionTitle('财务往来') +
+          '<div id="grid-finance-summary"></div>' +
+          '<div class="mt-6" id="aging-table"></div>' +
+          '<div class="mt-8">' +
+            renderSectionTitle('基础风险记录') +
+            '<div id="grid-risk-records"></div>' +
+          '</div>' +
+        '</div>';
+
+      renderGrid('grid-business', customerData.business);
+      renderGrid('grid-cooperation', customerData.cooperation);
+      renderGrid('grid-rating-conclusion', customerData.ratingConclusion);
+      renderGrid('grid-finance-summary', customerData.financeSummary);
+      renderAgingTable('aging-table', customerData.agingData);
+      renderGrid('grid-risk-records', customerData.riskRecords);
+    }
+
+    // ========== Init ==========
+    document.addEventListener('DOMContentLoaded', function() {
+      renderHeader();
+      renderContent();
+
+      // Global tooltip system — avoids overflow clipping
+      var tip = document.getElementById('global-tooltip');
+      document.addEventListener('mouseenter', function(e) {
+        var trigger = e.target.closest('.tip-trigger');
+        if (!trigger) return;
+        var text = trigger.getAttribute('data-tip');
+        if (!text) return;
+        tip.innerHTML = text.replace(/\n/g, '<br>');
+        tip.classList.add('visible');
+        var rect = trigger.getBoundingClientRect();
+        var tipRect = tip.getBoundingClientRect();
+        var left = rect.left + rect.width / 2 - tipRect.width / 2;
+        var top = rect.top - tipRect.height - 8;
+        // Keep within viewport horizontally
+        if (left < 8) left = 8;
+        if (left + tipRect.width > window.innerWidth - 8) left = window.innerWidth - tipRect.width - 8;
+        // If no room above, show below
+        if (top < 8) {
+          top = rect.bottom + 8;
+          tip.style.setProperty('--arrow-left', Math.min(Math.max(rect.left + rect.width / 2 - left, 10), tipRect.width - 10) + 'px');
+        } else {
+          tip.style.setProperty('--arrow-left', Math.min(Math.max(rect.left + rect.width / 2 - left, 10), tipRect.width - 10) + 'px');
+        }
+        tip.style.left = left + 'px';
+        tip.style.top = top + 'px';
+      }, true);
+      document.addEventListener('mouseleave', function(e) {
+        if (e.target.closest('.tip-trigger')) {
+          tip.classList.remove('visible');
+        }
+      }, true);
+    });
+  </script>
+
+</body>
+</html>
