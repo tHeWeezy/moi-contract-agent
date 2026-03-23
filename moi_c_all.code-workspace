@@ -1,0 +1,15 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "../moi_c_ClientInfo"
+		},
+		{
+			"path": "../moi_c_ProjectInfo"
+		}
+	],
+	"settings": {
+	}
+}

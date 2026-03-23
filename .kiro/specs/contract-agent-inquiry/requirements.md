@@ -2,7 +2,7 @@
 
 ## 简介
 
-本功能为"合同智能体"系统新增"信息问询"对话模块。用户可通过自然语言输入查询项目或客户信息，系统基于关键词匹配返回结构化数据卡片，并支持跳转至已有的详情页面（moi_c_ProjectInfo / moi_c_ClientInfo）。当前阶段采用前端 Mock 数据驱动，不依赖后端 AI 模型。
+本功能为"合同智能体"系统新增"信息问询"对话模块。用户可通过自然语言输入查询项目或客户信息，系统基于关键词匹配返回结构化数据卡片，并支持跳转至已有的项目信息或者客户信息文件夹下的具体页面（moi_c_ProjectInfo / moi_c_ClientInfo）。当前阶段采用前端 Mock 数据驱动，不依赖后端 AI 模型。
 
 ## 术语表
 
@@ -89,10 +89,10 @@
 
 #### 验收标准
 
-1. WHEN 项目卡片数据中所有记录归属同一个 ProjectID 时，THE Data_Card SHALL 展示按钮文案"👁 查看项目详情"，点击后携带该 ProjectID 在新浏览器页签中打开 moi_c_ProjectInfo 页面
-2. WHEN 项目卡片数据中包含多个不同 ProjectID 时，THE Data_Card SHALL 展示按钮文案"👁 查看完整列表"，点击后携带搜索关键词或 ID 集合参数在新浏览器页签中打开项目列表页
-3. WHEN 客户卡片数据中所有记录归属同一个 ClientID 时，THE Data_Card SHALL 展示按钮文案"👁 查看客户档案"，点击后携带该 ClientID 在新浏览器页签中打开 moi_c_ClientInfo 页面
-4. WHEN 客户卡片数据中包含多个不同 ClientID 时，THE Data_Card SHALL 展示按钮文案"👁 查看完整列表"，点击后携带搜索关键词或 ID 集合参数在新浏览器页签中打开客户列表页
+1. WHEN 项目卡片数据中所有记录归属同一个 ProjectID 时，THE Data_Card SHALL 展示按钮文案"👁 查看项目详情"，点击后携带该 ProjectID 在新浏览器页签中打开 `moi_c_ProjectInfo/dist/index.html#/project/{ProjectID}`
+2. WHEN 项目卡片数据中包含多个不同 ProjectID 时，THE Data_Card SHALL 展示按钮文案"👁 查看完整列表"，点击后在新浏览器页签中打开项目列表页 `moi_c_ProjectInfo/dist/index.html#/`
+3. WHEN 客户卡片数据中所有记录归属同一个 ClientID 时，THE Data_Card SHALL 展示按钮文案"👁 查看客户档案"，点击后携带该 ClientID 在新浏览器页签中打开 `moi_c_ClientInfo/index.html?id={ClientID}`
+4. WHEN 客户卡片数据中包含多个不同 ClientID 时，THE Data_Card SHALL 展示按钮文案"👁 查看完整列表"，点击后在新浏览器页签中打开客户列表页 `moi_c_ClientInfo/list.html`
 5. THE Data_Card SHALL 通过 window.open 在新浏览器页签中执行所有跳转动作
 
 ### 需求 8：聊天流数据结构标准化
