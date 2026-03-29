@@ -129,8 +129,8 @@
         { label: '近五年合作金额', value: 4500, type: 'money', unit: '万元' }
       ],
       ratingConclusion: [
-        { label: 'SAP内部系统评级', value: 'B' },
-        { label: 'AI问数评级', value: 'AAA' }
+        { label: '公司授予客户的信用等级', value: 'B', span: 2 },
+        { label: '标准付款要求', value: '等于或优于：非标（变体除外）产品预付10%及以上；货到3个月内付至60%及以上，货到9个月内付至90%及以上，质保金24个月以内，质保金比例不超过10%', span: 2 }
       ],
       financeSummary: [
         { label: '应收账款余额', value: 1200, type: 'money', unit: '万元', span: 2 },
@@ -196,8 +196,7 @@
       let badgesHtml = '';
       const statusVariant = getBadgeVariant('status', h.status);
       if (statusVariant) badgesHtml += renderBadge(h.status, statusVariant);
-      if (h.sapRating) badgesHtml += renderBadge('SAP评级：' + h.sapRating, 'primary');
-      if (h.aiRating) badgesHtml += renderBadge('AI评级：' + h.aiRating, 'secondary');
+      if (h.sapRating) badgesHtml += renderBadge('信用等级：' + h.sapRating, 'primary');
 
       container.innerHTML =
         '<div class="bg-white rounded-2xl shadow-sm ring-1 ring-slate-900/5 p-6 sm:p-8 mb-6 hover:shadow-md transition-shadow duration-300">' +
@@ -283,11 +282,11 @@
             html += '<div class="hidden sm:block col-span-1 px-4 py-3 bg-slate-50 ' + borderClass + ' border-r border-slate-100"></div>';
             html += '<div class="hidden sm:block col-span-1 px-4 py-3 bg-white ' + borderClass + '"></div>';
           }
-          html += '<div class="col-span-1 px-4 py-3 bg-slate-50 text-slate-500 text-sm font-medium ' + borderClass + ' border-r border-slate-100">' + labelHtml(field) + '</div>';
+          html += '<div class="col-span-1 px-4 py-3 bg-slate-50 text-slate-500 text-sm font-medium ' + borderClass + ' border-r border-slate-100 flex items-center">' + labelHtml(field) + '</div>';
           html += '<div class="col-span-1 sm:col-span-3 px-4 py-3 bg-white ' + valueTextColor + ' text-sm ' + borderClass + '">' + displayValue + '</div>';
           colPos = 0;
         } else {
-          html += '<div class="col-span-1 px-4 py-3 bg-slate-50 text-slate-500 text-sm font-medium ' + borderClass + ' border-r border-slate-100">' + labelHtml(field) + '</div>';
+          html += '<div class="col-span-1 px-4 py-3 bg-slate-50 text-slate-500 text-sm font-medium ' + borderClass + ' border-r border-slate-100 flex items-center">' + labelHtml(field) + '</div>';
           html += '<div class="col-span-1 px-4 py-3 bg-white ' + valueTextColor + ' text-sm ' + borderClass + (colPos === 0 ? ' sm:border-r border-slate-100' : '') + '">' + displayValue + '</div>';
           colPos = (colPos + 2) % 4;
         }
